@@ -13,7 +13,8 @@ from telegram.ext import (
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 
-# ================== TOKEN ==================
+# ================== TOKEN (تعديل هنا) ==================
+# هنا نقوم بسحب التوكن من إعدادات Railway التي قمت بضبطها مسبقاً
 TOKEN = os.getenv("8496832736:AAGMC-tAQTV6U-VZh7ec6dOcfykfhE2E6pE")
 
 # ================== STYLES =================
@@ -69,7 +70,6 @@ def parse_data_smart(text):
     current_cable = None
 
     for ln in lines[1:]:
-        # -------- POLE --------
         m_p = re.match(r"^[Pp](\d+)", ln)
         if m_p:
             num = int(m_p.group(1))
@@ -83,7 +83,6 @@ def parse_data_smart(text):
             current_cable = None
             continue
 
-        # -------- HANDHOLE --------
         m_h = re.match(r"^[Hh](\d+)", ln)
         if m_h:
             num = int(m_h.group(1))
@@ -97,7 +96,6 @@ def parse_data_smart(text):
             current_cable = None
             continue
 
-        # -------- FDH LOOP --------
         m_f = re.match(r"^[Ff][Dd][Hh](\d*)", ln)
         if m_f:
             num = int(m_f.group(1)) if m_f.group(1) else 0
@@ -114,7 +112,6 @@ def parse_data_smart(text):
         if not section or not current_entry:
             continue
 
-        # -------- CABLE TYPE --------
         cable_type = extract_cable_type(ln)
         if cable_type:
             current_cable = new_cable()
@@ -122,7 +119,6 @@ def parse_data_smart(text):
             current_entry["cables"].append(current_cable)
             continue
 
-        # -------- LOOP * DIAMETER --------
         if "*" in ln:
             if not current_cable:
                 current_cable = new_cable()
@@ -133,14 +129,11 @@ def parse_data_smart(text):
             )
             continue
 
-    # ======== SORT ALL SECTIONS ========
     data["poles"].sort(key=lambda x: x["sort"])
     data["handhole"].sort(key=lambda x: x["sort"])
     data["fdh_loop"].sort(key=lambda x: x["sort"])
 
     return data
-
-
 # ================== EXCEL =================
 def make_sheet(ws, title, entries, id_name):
     ws["A1"] = title
@@ -227,6 +220,11 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def main():
+    # التأكد من أن التوكن موجود
+    if not TOKEN:
+        print("❌ Error: BOT_TOKEN variable not found in environment!")
+        return
+
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle))
@@ -234,5 +232,5 @@ def main():
     app.run_polling()
 
 
-if __name__ == "__main__":
+if __name__ == "main":
     main()
